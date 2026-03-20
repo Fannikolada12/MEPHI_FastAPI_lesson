@@ -2,8 +2,8 @@
 
 from fastapi import APIRouter, Body
 
-from .forms import UserNameParts
-from .query import getIp
+from .forms import UserNameParts, BirthDate
+from .query import getIp, getTime, getZodiacSign, getHoroscope
 
 router = APIRouter()
 
@@ -53,6 +53,19 @@ async def current_ip() -> str:
     return ip
 
 
+@router.get('/users/current/full-time', name='Получить IP и точное время')
+async def current_full_time():
+    # 1. Сначала получаем IP с помощью готовой функции
+    user_ip = getIp()
+
+    # 2. Передаем этот IP в нашу новую функцию
+    time_data = getTime(user_ip)
+
+    # 3. Возвращаем результат пользователю
+    return {
+        "ip": user_ip,
+        "time_info": time_data
+    }
 # ЗАДАНИЕ 1: Реализуйте эндпоинт GET /users/current/full-time
 # Этот эндпоинт должен:
 # 1. Получить текущий IP-адрес пользователя (используйте функцию getIp())
@@ -91,3 +104,21 @@ async def current_ip() -> str:
 #     """
 #     # TODO: Студент должен реализовать этот метод
 #     pass
+@router.post('/horoscope', name='Получить гороскоп по дате рождения')
+async def get_user_horoscope(user_date: BirthDate = Body(...)):
+    # Извлекаем месяц и день из полученной даты
+    # user_date.birthDate - это объект даты, у которого есть свойства .month и .day
+    month = user_date.birthDate.month
+    day = user_date.birthDate.day
+
+    # 1. Узнаем знак зодиака
+    sign = getZodiacSign(month, day)
+
+    # 2. Получаем гороскоп по этому знаку
+    horoscope_data = getHoroscope(sign)
+
+    # 3. Возвращаем красивый ответ пользователю
+    return {
+        "zodiac_sign": sign,
+        "horoscope": horoscope_data
+    }
